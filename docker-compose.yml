@@ -110,11 +110,11 @@ services:
       args:
         FRONTEND_ENV: ${FRONTEND_ENV-production}
 
-  mlflow:
-    image: '${DOCKER_IMAGE_MLFLOW?Variable not set}:${TAG-latest}'
-    build:
-      context: ./mlflow-env
-      dockerifle: ml.Dockerfile
+  # mlflow:
+  #   image: '${DOCKER_IMAGE_MLFLOW?Variable not set}:${TAG-latest}'
+  #   build:
+  #     context: ./mlflow-env
+  #     dockerifle: ml.Dockerfile
 
 volumes:
   app-db-data:

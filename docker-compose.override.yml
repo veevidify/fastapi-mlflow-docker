@@ -18,9 +18,17 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-traefik-public-http.rule=Host(`${DOMAIN?Variable not set}`)
       - traefik.http.services.${STACK_NAME?Variable not set}-traefik-public.loadbalancer.server.port=80
 
+  # append the script in entrypoint to create multiple db
+  # for now consider dev env only
+  db:
+    volumes:
+      - ./scripts/postgres:/docker-entrypoint-initdb.d
+
   pgadmin:
     ports:
       - ${PGADMIN_PORT}:5050
+    environment:
+      - POSTGRES_MULTI_DB=${POSTGRES_MULTI_DB}
 
   flower:
     ports:
