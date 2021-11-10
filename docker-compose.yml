@@ -110,11 +110,20 @@ services:
       args:
         FRONTEND_ENV: ${FRONTEND_ENV-production}
 
-  # mlflow:
-  #   image: '${DOCKER_IMAGE_MLFLOW?Variable not set}:${TAG-latest}'
-  #   build:
-  #     context: ./mlflow-env
-  #     dockerifle: ml.Dockerfile
+  mlflow:
+    image: '${DOCKER_IMAGE_MLFLOW?Variable not set}:${TAG-latest}'
+    build:
+      context: ./mlflow-env
+      dockerfile: ml.Dockerfile
+    volumes:
+      - .:/ml
+    # possible to run --no-conda
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/ml
+      --default-artifact-root file:/ml/artifacts
+      --host 0.0.0.0
+      --port 5000
 
 volumes:
   app-db-data:
