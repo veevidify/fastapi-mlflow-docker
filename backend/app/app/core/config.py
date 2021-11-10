@@ -85,6 +85,8 @@ class Settings(BaseSettings):
     BROKER_URL: str = ""
     CELERY_RESULT_BACKEND: str = ""
 
+    MLFLOW_PORT: int = 5000
+
     class Config:
         case_sensitive = True
 

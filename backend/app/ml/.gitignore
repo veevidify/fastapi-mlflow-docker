@@ -1,0 +1,5 @@
+training/temp/*
+!training/temp/.gitkeep
+
+*.txt
+*.png

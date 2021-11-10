@@ -1,0 +1,13 @@
+[Unit]
+Description=MLflow tracking server
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=30
+StandardOutput=file:/home/petra/mlruns/stdout.log
+StandardError=file:/home/petra/mlruns/stderr.log
+ExecStart=/bin/bash -c 'PATH=/home/petra/miniconda3/envs/env_mlflow/bin/:$PATH exec mlflow server --backend-store-uri postgresql://mlflow_user@localhost/mlflow_db --default-artifact-root file:/home/petra/artifact_root --host 0.0.0.0 --port 5000'
+
+[Install]
+WantedBy=multi-user.target

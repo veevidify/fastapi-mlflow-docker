@@ -103,10 +103,18 @@ services:
 
   frontend:
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
+    ports:
+      - ${MLFLOW_PORT}:5000
     build:
       context: ./frontend
       args:
         FRONTEND_ENV: ${FRONTEND_ENV-production}
+
+  mlflow:
+    image: '${DOCKER_IMAGE_MLFLOW?Variable not set}:${TAG-latest}'
+    build:
+      context: ./mlflow-env
+      dockerifle: ml.Dockerfile
 
 volumes:
   app-db-data:

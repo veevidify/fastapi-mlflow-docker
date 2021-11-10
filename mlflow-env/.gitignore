@@ -1,0 +1,5 @@
+mlruns/*
+!mlruns/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+*.png
