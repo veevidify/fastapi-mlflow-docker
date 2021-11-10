@@ -23,12 +23,12 @@ services:
   db:
     volumes:
       - ./scripts/postgres:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_MULTI_DB=${POSTGRES_MULTI_DB}
 
   pgadmin:
     ports:
       - ${PGADMIN_PORT}:5050
-    environment:
-      - POSTGRES_MULTI_DB=${POSTGRES_MULTI_DB}
 
   flower:
     ports:
