@@ -92,6 +92,10 @@ services:
     ports:
       - ${MLFLOW_PORT}:5000
 
+  mlflowui:
+    ports:
+      - ${MLFLOWUI_PORT}:5000
+
 networks:
   traefik-public:
     # For local dev, don't expect an external Traefik network

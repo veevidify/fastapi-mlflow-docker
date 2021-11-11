@@ -123,6 +123,21 @@ services:
       --host 0.0.0.0
       --port 5000
 
+  mlflowui:
+    image: '${DOCKER_IMAGE_MLFLOWUI?Variable not set}:${TAG-latest}'
+    build:
+      context: ./mlflow-env
+      dockerfile: ml.Dockerfile
+    volumes:
+      - .:/ml
+    # possible to run --no-conda
+    command: >
+      mlflow ui
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/ml
+      --default-artifact-root file:/ml/artifacts
+      --host 0.0.0.0
+      --port 5000
+
 volumes:
   app-db-data:
 
