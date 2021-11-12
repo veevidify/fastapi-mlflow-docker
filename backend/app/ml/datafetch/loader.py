@@ -15,4 +15,4 @@ def load_dataset():
     cols = diabetes.feature_names + ["progression"]
     data = pd.DataFrame(d, columns=cols)
 
-    return data
+    return data, X, y

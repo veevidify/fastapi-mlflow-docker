@@ -89,12 +89,38 @@ services:
       - "8025:8025"
 
   mlflow:
+    # workaround in place of a remote filesystem (e.g. s3)
+    # by mapping identical path on both client and server
+    volumes:
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+    # working_dir: ${PROJECT_ROOT}/mlflow-env
     ports:
       - ${MLFLOW_PORT}:5000
+    # possible to run --no-conda
+    # will be different in live, e.g. artifact root will be s3
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/mldb
+      --default-artifact-root file://${PROJECT_ROOT}/mlflow-env/artifacts
+      --host 0.0.0.0
+      --port 5000
 
   mlflowui:
+    # workaround in place of a remote filesystem (e.g. s3)
+    # by mapping identical path on both client and server
+    volumes:
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+    # working_dir: ${PROJECT_ROOT}/mlflow-env
     ports:
       - ${MLFLOWUI_PORT}:5000
+    # possible to run --no-conda
+    # will be different in live, e.g. artifact root will be s3
+    command: >
+      mlflow ui
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/mldb
+      --default-artifact-root file://${PROJECT_ROOT}/mlflow-env/artifacts
+      --host 0.0.0.0
+      --port 5000
 
 networks:
   traefik-public:

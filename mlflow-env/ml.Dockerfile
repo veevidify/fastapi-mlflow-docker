@@ -1,6 +1,8 @@
 from python:3.8-slim
 
-WORKDIR /ml
+ARG WORKDIR
+
+WORKDIR $WORKDIR
 
 # install conda for mlflow env
 RUN apt-get update; apt-get install -y curl
@@ -11,7 +13,7 @@ ENV PATH=/root/miniconda3/bin:${PATH}
 
 RUN conda update -y conda
 
-COPY . /ml
+COPY . $WORKDIR
 RUN conda init
 
 # pg tools

@@ -5,9 +5,13 @@ from app.api.api_v1.api import api_router
 from app.api.ws.ws import ws_router
 from app.core.config import settings
 
+import mlflow
+
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+mlflow.set_tracking_uri('http://mlflow:' + settings.MLFLOW_PORT)
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
