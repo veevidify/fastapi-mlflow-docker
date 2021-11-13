@@ -3,3 +3,4 @@ from .msg import Msg, ResponseMsg, WSResponse
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
 from .task_status import TaskStatus
+from .model_params import EnetParam

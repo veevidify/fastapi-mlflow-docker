@@ -123,10 +123,17 @@ def train_enet_diabetes_dataset(alpha: float, l1_ratio: float):
     }
 
     mlflow_logging(lr, params_dict, metrics_dict)
-    construct_persist_fig(X, y, alpha, l1_ratio)
 
     # persist training data
     data.to_csv('temp/diabetes.txt', encoding="utf-8", index=False)
+
+    construct_persist_fig(X, y, alpha, l1_ratio)
+
+    run = mlflow.active_run()
+    print("Active run: {}".format(run.info.run_id))
+    run_id = run.info.run_id
+
+    return run_id
 
 # for test model directly from console poetry venv
 if __name__ == "__main__":
