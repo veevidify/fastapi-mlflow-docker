@@ -6,6 +6,9 @@ from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+import mlflow
+from mlflow.tracking import MlflowClient
+
 from app import crud, models, schemas
 from app.core import security
 from app.core.config import settings
@@ -91,3 +94,7 @@ async def get_authed_user_for_ws(
         raise HTTPException(status_code=401, detail="Unauthorized.")
 
     return user
+
+def get_mlflow_client():
+    client = MlflowClient(mlflow.get_tracking_uri(), mlflow.get_registry_uri())
+    return client

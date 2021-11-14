@@ -37,8 +37,11 @@ services:
   backend:
     ports:
       - ${BACKEND_PORT}:8888
+    # same workaround with mlflow to replace remote fileserver,
+    # so mlflow client & server can persist artifacts on the same destination
     volumes:
       - ./backend/app:/app
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
     environment:
       - JUPYTER=jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
       - SERVER_HOST=http://${DOMAIN?Variable not set}
