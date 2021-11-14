@@ -11,7 +11,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-mlflow.set_tracking_uri('http://mlflow:' + settings.MLFLOW_PORT)
+mlflow.set_tracking_uri('http://mlflow:5000')
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

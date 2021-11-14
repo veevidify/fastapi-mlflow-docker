@@ -99,34 +99,45 @@ def train_enet_diabetes_dataset(alpha: float, l1_ratio: float):
     train_y = train[["progression"]]
     test_y = test[["progression"]]
 
-    # ElasticNet Fit-Predict
-    lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
-    lr.fit(train_x, train_y)
-    predicted_qualities = lr.predict(test_x)
-    (rmse, mae, r2) = eval_metrics(test_y, predicted_qualities)
+    run_id = None
+    with mlflow.start_run() as run:
+        print(mlflow.get_tracking_uri())
+        print(mlflow.get_artifact_uri())
 
-    # Console logging ElasticNet model metrics
-    print("Elasticnet model with (alpha=%f, l1_ratio=%f):" % (alpha, l1_ratio))
-    print("  RMSE: %s" % rmse)
-    print("  MAE: %s" % mae)
-    print("  R2: %s" % r2)
+        # ElasticNet Fit-Predict
+        lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
+        lr.fit(train_x, train_y)
+        predicted_qualities = lr.predict(test_x)
+        (rmse, mae, r2) = eval_metrics(test_y, predicted_qualities)
 
-    # mlflow logging attributes for mlflow UI
-    params_dict = {
-        "alpha": alpha,
-        "l1_ratio": l1_ratio,
-    }
-    metrics_dict = {
-        "rmse": rmse,
-        "r2": r2,
-        "mae": mae,
-    }
+        # Console logging ElasticNet model metrics
+        print("Elasticnet model with (alpha=%f, l1_ratio=%f):" % (alpha, l1_ratio))
+        print("  RMSE: %s" % rmse)
+        print("  MAE: %s" % mae)
+        print("  R2: %s" % r2)
 
-    mlflow_logging(lr, params_dict, metrics_dict)
-    construct_persist_fig(X, y, alpha, l1_ratio)
+        # mlflow logging attributes for mlflow UI
+        params_dict = {
+            "alpha": alpha,
+            "l1_ratio": l1_ratio,
+        }
+        metrics_dict = {
+            "rmse": rmse,
+            "r2": r2,
+            "mae": mae,
+        }
 
-    # persist training data
-    data.to_csv('temp/diabetes.txt', encoding="utf-8", index=False)
+        mlflow_logging(lr, params_dict, metrics_dict)
+
+        # persist training data
+        data.to_csv('temp/diabetes.txt', encoding="utf-8", index=False)
+
+        construct_persist_fig(X, y, alpha, l1_ratio)
+
+        print("Active run: {}".format(run.info.run_id))
+        run_id = run.info.run_id
+
+    return run_id
 
 # for test model directly from console poetry venv
 if __name__ == "__main__":
@@ -136,6 +147,4 @@ if __name__ == "__main__":
     # from within the container (if desire),
     # this uri has to be http://mlflow:MLFLOW_PORT ?
     mlflow.set_tracking_uri('http://localhost:5005')
-    print(mlflow.get_tracking_uri())
-    print(mlflow.get_artifact_uri())
     train_enet_diabetes_dataset(alpha, l1_ratio)
