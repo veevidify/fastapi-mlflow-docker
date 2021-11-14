@@ -22,3 +22,21 @@ class RunData(BaseModel):
 class Run(BaseModel):
     data: RunData
     info: RunInfo
+
+class ModelCreateMeta(BaseModel):
+    name: str
+
+class ModelVersion(BaseModel):
+    creation_timestamp: int
+    last_updated_timestamp: int
+    name: str
+    current_stage: str
+    description: str
+    run_id: str
+    run_link: str
+    source: str
+    status: str
+    status_message: str
+    tags: dict
+    user_id: str
+    version: str

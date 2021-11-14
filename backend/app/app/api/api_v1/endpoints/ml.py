@@ -1,6 +1,7 @@
+import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,8 @@ from app.api import deps
 from app.worker import celery_app
 
 router = APIRouter()
+
+# == run workflow == #
 
 # /train-model
 @router.post("/train-model", response_model=schemas.ResponseMsg, status_code=201)
@@ -35,15 +38,14 @@ async def query_all_runs(
     current_user: models.User = Depends(deps.get_current_active_superuser),
     mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
 ):
-    runs = mlflow_client.list_run_infos(
+    run_infos = mlflow_client.list_run_infos(
         "0",
         run_view_type=ViewType.ALL,
-        order_by=["metric.click_rate DESC"]
     )
 
     results = []
-    for run in runs:
-        results.append(schemas.RunInfo.parse_obj(run))
+    for run_info in run_infos:
+        results.append(schemas.RunInfo.parse_obj(run_info))
 
     return results
 
@@ -55,7 +57,42 @@ async def get_run_details(
     mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
 ):
 
-    run = mlflow_client.get_run(run_id)
+    try:
+        run = mlflow_client.get_run(run_id)
+
+    except:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run does not exist.")
+
     result = schemas.Run.parse_obj(run)
 
     return result
+
+# == end run workflow == #
+
+# == model reg workflow == #
+
+# /run/{run_id}/register-model
+@router.post("/run/{run_id}/register-model", response_model=schemas.ModelVersion)
+async def register_model_from_run(
+    run_id: str,
+    model_meta: schemas.ModelCreateMeta,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    model_name = model_meta.name.replace(" ", "-") + "-" + str(int(time.time()))
+
+    # check run exist
+    try:
+        run = mlflow_client.get_run(run_id)
+
+    except:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run does not exist.")
+
+    # register
+    result = mlflow.register_model(
+        f"runs:/{run_id}/model",
+        model_name,
+    )
+
+    model_version = schemas.ModelVersion.parse_obj(result)
+    return model_version
