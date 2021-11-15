@@ -9,10 +9,12 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
 from mlflow.utils.rest_utils import RestException, RESOURCE_DOES_NOT_EXIST
+from mlflow.exceptions import MlflowException
 
 from app import crud, models, schemas
 from app.api import deps
 from app.worker import celery_app
+from ml.fe.converters import convert_dict_datapoints
 
 router = APIRouter()
 
@@ -137,17 +139,77 @@ async def archive_registered_model(
     except RestException as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model with name {model_name} does not exist.")
 
+    # wip: handle mlflow.exceptions.MlflowException: No versions of model
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model does not have an unarchived version.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
     except Exception as e:
-        print(e)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
 
 
     mlflow_client.transition_model_version_stage(model_name, 1, "Archived")
+
+# /model/{}/unarchive
+@router.get("/model/{model_name}/unarchive", status_code=204)
+async def unarchive_registered_model(
+    model_name: str,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    # worth abstractions using deps?
+    try:
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/Archived")
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model with name {model_name} does not exist.")
+
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model does not have an archived version.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    mlflow_client.transition_model_version_stage(model_name, 1, "None")
 
 # == end model reg workflow == #
 
 # == predict workflow == #
 
 # /model/{}/predict
+@router.post("/model/{model_name}/predict", response_model=List[float])
+async def load_model_and_predict(
+    model_name: str,
+    input_data: List[schemas.DatapointToPredict],
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    try:
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/None")
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model not found.")
+
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model not found.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    input_np = convert_dict_datapoints(input_data)
+
+    results = model.predict(input_np)
+    return results.tolist()
 
 # == end predict workflow == #
