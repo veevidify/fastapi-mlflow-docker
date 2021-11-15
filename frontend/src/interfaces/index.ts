@@ -103,3 +103,16 @@ export interface IRegisteredModel {
 export interface IModelCreateMeta {
     name: string;
 }
+
+export interface IInputData {
+    age: number;
+    sex: number;
+    bmi: number;
+    bp: number;
+    s1: number;
+    s2: number;
+    s3: number;
+    s4: number;
+    s5: number;
+    s6: number;
+}

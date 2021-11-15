@@ -13,6 +13,7 @@ import {
   IRegisteredModel,
   IRun,
   IModelCreateMeta,
+  IInputData,
 } from './interfaces';
 
 function configWithAuthHeaders(token: string) {
@@ -137,6 +138,13 @@ export const api = {
   async restoreModel(modelName: string, token: string) {
     return axios.get(
       `${apiPrefix}/ml/model/${modelName}/unarchive`,
+      configWithAuthHeaders(token),
+    );
+  },
+  async predictWithModel(modelName: string, inputData: IInputData, token: string) {
+    return axios.post(
+      `${apiPrefix}/ml/model/${modelName}/predict`,
+      inputData,
       configWithAuthHeaders(token),
     );
   },
