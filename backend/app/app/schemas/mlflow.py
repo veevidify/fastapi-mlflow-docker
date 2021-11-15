@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
+# Note: not to confuse this module's Model with pydantic's Model naming
 
 class EnetParam(BaseModel):
     alpha: float
@@ -40,3 +41,11 @@ class ModelVersion(BaseModel):
     tags: dict
     user_id: str
     version: str
+
+class RegisteredModel(BaseModel):
+    latest_versions: List[ModelVersion]
+    name: str
+    tags: dict
+    creation_timestamp: int
+    last_updated_timestamp: int
+    description: str
