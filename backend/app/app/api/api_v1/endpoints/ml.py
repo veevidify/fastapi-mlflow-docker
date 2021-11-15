@@ -1,18 +1,24 @@
+import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
 import mlflow
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
+from mlflow.utils.rest_utils import RestException, RESOURCE_DOES_NOT_EXIST
+from mlflow.exceptions import MlflowException
 
 from app import crud, models, schemas
 from app.api import deps
 from app.worker import celery_app
+from ml.fe.converters import convert_dict_datapoints
 
 router = APIRouter()
+
+# == run workflow == #
 
 # /train-model
 @router.post("/train-model", response_model=schemas.ResponseMsg, status_code=201)
@@ -35,15 +41,14 @@ async def query_all_runs(
     current_user: models.User = Depends(deps.get_current_active_superuser),
     mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
 ):
-    runs = mlflow_client.list_run_infos(
+    run_infos = mlflow_client.list_run_infos(
         "0",
         run_view_type=ViewType.ALL,
-        order_by=["metric.click_rate DESC"]
     )
 
     results = []
-    for run in runs:
-        results.append(schemas.RunInfo.parse_obj(run))
+    for run_info in run_infos:
+        results.append(schemas.RunInfo.parse_obj(run_info))
 
     return results
 
@@ -55,7 +60,156 @@ async def get_run_details(
     mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
 ):
 
-    run = mlflow_client.get_run(run_id)
+    try:
+        run = mlflow_client.get_run(run_id)
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run does not exist.")
+
+    except:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
     result = schemas.Run.parse_obj(run)
 
     return result
+
+# == end run workflow == #
+
+# == model reg workflow == #
+
+# /run/{run_id}/register-model
+@router.post("/run/{run_id}/register-model", response_model=schemas.ModelVersion)
+async def register_model_from_run(
+    run_id: str,
+    model_meta: schemas.ModelCreateMeta,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    model_name = model_meta.name.replace(" ", "-")
+
+    # check run exist
+    try:
+        run = mlflow_client.get_run(run_id)
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run does not exist.")
+
+    except:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    # register
+    result = mlflow.register_model(
+        f"runs:/{run_id}/model",
+        model_name,
+    )
+
+    model_version = schemas.ModelVersion.parse_obj(result)
+    return model_version
+
+# /registered-models
+# will have to paginate in the future?
+@router.get('/registered-models', response_model=List[schemas.RegisteredModel])
+async def list_registered_models(
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+
+    models = mlflow_client.list_registered_models()
+    results = []
+    for model in models:
+        results.append(schemas.RegisteredModel.parse_obj(model))
+
+    return results
+
+# wip:
+# /model/{}/update
+# rename, change description, transition model stage, refit
+
+# /model/{}/archive
+@router.get("/model/{model_name}/archive", status_code=204)
+async def archive_registered_model(
+    model_name: str,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    # worth abstractions using deps?
+    try:
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/None")
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model with name {model_name} does not exist.")
+
+    # wip: handle mlflow.exceptions.MlflowException: No versions of model
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model does not have an unarchived version.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+
+    mlflow_client.transition_model_version_stage(model_name, 1, "Archived")
+
+# /model/{}/unarchive
+@router.get("/model/{model_name}/unarchive", status_code=204)
+async def unarchive_registered_model(
+    model_name: str,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    # worth abstractions using deps?
+    try:
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/Archived")
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model with name {model_name} does not exist.")
+
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model does not have an archived version.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    mlflow_client.transition_model_version_stage(model_name, 1, "None")
+
+# == end model reg workflow == #
+
+# == predict workflow == #
+
+# /model/{}/predict
+@router.post("/model/{model_name}/predict", response_model=List[float])
+async def load_model_and_predict(
+    model_name: str,
+    input_data: List[schemas.DatapointToPredict],
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    mlflow_client: MlflowClient = Depends(deps.get_mlflow_client),
+):
+    try:
+        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/None")
+
+    except RestException as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Model not found.")
+
+    except MlflowException as e:
+        if (e.message.startswith("No versions of model")):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Model not found.")
+
+        else:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error.")
+
+    input_np = convert_dict_datapoints(input_data)
+
+    results = model.predict(input_np)
+    return results.tolist()
+
+# == end predict workflow == #
