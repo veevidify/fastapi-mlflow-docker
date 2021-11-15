@@ -101,8 +101,8 @@ def train_enet_diabetes_dataset(alpha: float, l1_ratio: float):
 
     run_id = None
     with mlflow.start_run() as run:
-        print(mlflow.get_tracking_uri())
-        print(mlflow.get_artifact_uri())
+        # print(mlflow.get_tracking_uri())
+        # print(mlflow.get_artifact_uri())
 
         # ElasticNet Fit-Predict
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
