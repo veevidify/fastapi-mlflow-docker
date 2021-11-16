@@ -118,7 +118,7 @@ export default new Router({
                 },
                 {
                   path: 'runs/:id',
-                  // name: 'main-admin-users-edit',
+                  name: 'main-mlflow-run-details',
                   component: () => import(
                     /* webpackChunkName: "main-mlflow-run-details" */ './views/main/mlflow/RunDetails.vue'),
                 },

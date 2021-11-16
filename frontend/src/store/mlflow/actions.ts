@@ -74,7 +74,14 @@ export const actions = {
         }
     },
     async actionGetAllRunInfos(context: MainContext) {
-
+        const authToken = context.rootState.main.token;
+        try {
+            const resp = await api.getRuns(authToken);
+            const { data } = resp;
+            commitSetRunInfos(context, data);
+        } catch (e) {
+            await dispatchCheckApiError(context, e);
+        }
     },
     async actionGetAllRegisteredModels(context: MainContext) {
 

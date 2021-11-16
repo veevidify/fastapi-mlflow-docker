@@ -112,7 +112,7 @@ export const api = {
   },
   async getSingleRun(runId: string, token: string) {
     return axios.get<IRun>(
-      `${apiPrefix}/ml/run/${runId}`,
+      `${apiPrefix}/ml/runs/${runId}`,
       configWithAuthHeaders(token),
     );
   },
