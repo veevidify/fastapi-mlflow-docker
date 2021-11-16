@@ -112,6 +112,26 @@ export default new Router({
                   path: 'train',
                   component: () => import(/* webpackChunkName: "main-mlflow-train" */ './views/main/mlflow/TrainingTask.vue'),
                 },
+                {
+                  path: 'runs',
+                  component: () => import(/* webpackChunkName: "main-mlflow-runs" */ './views/main/mlflow/RunList.vue'),
+                },
+                {
+                  path: 'runs/:id',
+                  // name: 'main-admin-users-edit',
+                  component: () => import(
+                    /* webpackChunkName: "main-mlflow-run-details" */ './views/main/mlflow/RunDetails.vue'),
+                },
+                {
+                  path: 'models',
+                  component: () => import(/* webpackChunkName: "main-mlflow-models" */ './views/main/mlflow/ModelList.vue'),
+                },
+                {
+                  path: 'models/:id',
+                  // name: 'main-admin-users-edit',
+                  component: () => import(
+                    /* webpackChunkName: "main-mlflow-model-details" */ './views/main/mlflow/ModelDetails.vue'),
+                },
               ],
             },
           ],

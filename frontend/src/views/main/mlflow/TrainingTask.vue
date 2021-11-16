@@ -8,10 +8,6 @@
         <template>
           <div class="my-3">
             <div class="subheading secondary--text text--lighten-2">Model hyper-parameters</div>
-            <div
-              class="title primary--text text--darken-2"
-              v-if="task"
-            >alpha: {{task.alpha}} - l1_ratio: {{task.l1_ratio}}</div>
           </div>
           <v-form
             v-model="valid"
@@ -54,20 +50,27 @@
           <div class="my-3">
             <div class="subheading secondary--text text--lighten-2">Task:</div>
             <div
-              class="title primary--text text--darken-2"
+              class="title primary--text text--darken-2 pa-2"
               v-if="task"
             >{{task.task_id}}</div>
             <v-spacer></v-spacer>
             <div class="subheading secondary--text text--lighten-2">Status:</div>
             <div
-              class="title primary--text text--darken-2"
+              class="title primary--text text--darken-2 pa-2"
               v-if="task"
             >{{task.task_status}}</div>
+            <v-spacer></v-spacer>
             <div class="subheading secondary--text text--lighten-2">Result (MLFlow run_id):</div>
             <div
-              class="title primary--text text--darken-2"
+              class="title primary--text text--darken-2 pa-2"
               v-if="task"
             >{{task.task_result}}</div>
+            <div v-if="task">
+              <router-link
+                :to="`/main/mlflow/runs/${task.task_result}`"
+                class="subheading text--lighten-2"
+              > -- View Run Details</router-link>
+            </div>
           </div>
         </template>
       </v-card-text>
@@ -126,6 +129,10 @@ export default class TrainingTask extends Vue {
     if (taskId) {
       await dispatchPollTaskResult(this.$store, { task_id: taskId });
     }
+  }
+
+  public async gotoRunDetails() {
+    console.log("follow details link");
   }
 
   get task() {
