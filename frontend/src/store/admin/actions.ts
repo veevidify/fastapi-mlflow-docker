@@ -72,11 +72,11 @@ export const actions = {
         } catch (e) {
             const err = { msg: e, task_id: e };
             commitUpdateTaskId(context, err);
+            await dispatchCheckApiError(context, e);
         }
     },
     // using state's current task id to poll result
-    async actionPollTaskResult(context: MainContext, payload: WithTaskId) {
-        const currentTaskMsg = context.state.currentTask.msg;
+    async actionPollTaskResult(context: MainContext, payload: {} & WithTaskId) {
         const currentTaskId = context.state.taskResult?.task_id || '';
 
         const authToken = context.rootState.main.token;
@@ -96,6 +96,7 @@ export const actions = {
                     task_status: 'failed',
                 };
                 commitUpdateTaskResult(context, err);
+                await dispatchCheckApiError(context, e);
             }
         }
     },

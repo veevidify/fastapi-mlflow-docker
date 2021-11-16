@@ -1,4 +1,4 @@
-import { IRun, IRunInfo, IRegisteredModel, IMsg, WithTaskId, ITaskPayload } from '@/interfaces';
+import { IRun, IRunInfo, IRegisteredModel, IMsg, WithTaskId, ITaskPayload, IModelVersion, IEnetParam } from '@/interfaces';
 import { MLFlowState } from './state';
 import { getStoreAccessors } from 'typesafe-vuex';
 import { State } from '../state';
@@ -10,21 +10,27 @@ export const mutations = {
     setRegisteredModels(state: MLFlowState, payload: IRegisteredModel[]) {
         state.registeredModels = payload;
     },
-    setCurrentTask(state: MLFlowState, payload: IMsg) {
-        state.currentTask = payload;
+    setCurrentTask(state: MLFlowState, payload: IEnetParam) {
+        state.currentTrainingTask = payload;
     },
     updateTaskId(state: MLFlowState, payload: IMsg & WithTaskId) {
-        state.taskResult = {
+        state.trainingTaskResult = {
         task_id: payload.task_id,
         task_status: 'pending',
         task_result: 'pending',
         };
     },
     updateTaskResult(state: MLFlowState, payload: ITaskPayload | null) {
-        state.taskResult = payload;
+        state.trainingTaskResult = payload;
+    },
+    updateCurrentRunId(state: MLFlowState, payload: string) {
+        state.currentRunId = payload;
     },
     setCurrentRun(state: MLFlowState, payload: IRun) {
         state.currentRun = payload;
+    },
+    setCurrentRegisteredModel(state: MLFlowState, payload: IModelVersion) {
+        state.currentRegisteredModel = payload;
     },
 };
 
@@ -35,4 +41,6 @@ export const commitSetRegisteredModels = commit(mutations.setRegisteredModels);
 export const commitSetCurrentTask = commit(mutations.setCurrentTask);
 export const commitUpdateTaskId = commit(mutations.updateTaskId);
 export const commitUpdateTaskResult = commit(mutations.updateTaskResult);
+export const commitUpdateCurrentRunId = commit(mutations.updateCurrentRunId);
 export const commitSetCurrentRun = commit(mutations.setCurrentRun);
+export const commitSetCurrentRegisteredModel = commit(mutations.setCurrentRegisteredModel);

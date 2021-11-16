@@ -91,8 +91,8 @@ services:
     image: mailhog/mailhog
 
     ports:
-      - ${SMTP_PORT}:1025
-      - "8025:8025"
+      - ${MAILHOG_PORT}:1025
+      - ${MAILHOGUI_PORT}:8025
 
   mlflow:
     # workaround in place of a remote filesystem (e.g. s3)

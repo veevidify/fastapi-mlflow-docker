@@ -1,7 +1,7 @@
 declare global {
-    type GObject = {
-        [key: string]: any,
-    };
+    interface GObject {
+        [key: string]: any;
+    }
 }
 
 export interface IUserProfile {

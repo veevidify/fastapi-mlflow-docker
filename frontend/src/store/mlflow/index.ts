@@ -6,9 +6,11 @@ import { MLFlowState } from './state';
 const defaultState: MLFlowState = {
   runInfos: [],
   registeredModels: [],
-  currentTask: { msg: '' },
-  taskResult: null,
+  currentTrainingTask: { alpha: 0, l1_ratio: 0 },
+  trainingTaskResult: null,
+  currentRunId: '',
   currentRun: null,
+  currentRegisteredModel: null,
 };
 
 export const mlflowModule = {

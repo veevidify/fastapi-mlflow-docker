@@ -1,9 +1,13 @@
-import { IMsg, IRegisteredModel, IRun, IRunInfo, ITaskPayload } from '@/interfaces';
+import { IMsg, IRegisteredModel, IRun, IRunInfo, ITaskPayload, IModelVersion, IEnetParam } from '@/interfaces';
 
 export interface MLFlowState {
   runInfos: IRunInfo[];
   registeredModels: IRegisteredModel[];
-  currentTask: IMsg;
-  taskResult: ITaskPayload | null;
+
+  currentTrainingTask: IEnetParam;
+  trainingTaskResult: ITaskPayload | null;
+
+  currentRunId: string;
   currentRun: IRun | null;
+  currentRegisteredModel: IModelVersion | null;
 }
