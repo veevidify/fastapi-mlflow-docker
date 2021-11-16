@@ -103,6 +103,17 @@ export default new Router({
                 },
               ],
             },
+            {
+              path: 'mlflow',
+              component: RouterComponent,
+              redirect: 'dashboard',
+              children: [
+                {
+                  path: 'train',
+                  component: () => import(/* webpackChunkName: "main-mlflow-train" */ './views/main/mlflow/TrainingTask.vue'),
+                },
+              ],
+            },
           ],
         },
       ],

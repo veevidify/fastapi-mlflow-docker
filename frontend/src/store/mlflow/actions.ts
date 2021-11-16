@@ -20,7 +20,7 @@ import { dispatchCheckApiError } from '../main/actions';
 type MainContext = ActionContext<MLFlowState, State>;
 
 export const actions = {
-    async sendTaskTrainModel(context: MainContext, payload: IEnetParam) {
+    async actionSendTaskTrainModel(context: MainContext, payload: IEnetParam) {
         commitSetCurrentTask(context, payload);
         const authToken = context.rootState.main.token;
         try {
@@ -85,3 +85,11 @@ export const actions = {
 };
 
 const { dispatch } = getStoreAccessors<MLFlowState, State>('');
+
+export const dispatchSendTaskTrainModel = dispatch(actions.actionSendTaskTrainModel);
+export const dispatchPollTaskResult = dispatch(actions.actionPollTaskResult);
+export const dispatchClearCurrentTask = dispatch(actions.actionClearCurrentTask);
+export const dispatchQueryRunDetails = dispatch(actions.actionQueryRunDetails);
+export const dispatchGetAllRunInfos = dispatch(actions.actionGetAllRunInfos);
+export const dispatchGetAllRegisteredModels = dispatch(actions.actionGetAllRegisteredModels);
+export const dispatchRegisterAModelFromRun = dispatch(actions.actionRegisterAModelFromRun);

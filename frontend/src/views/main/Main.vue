@@ -77,6 +77,18 @@
             </v-list-tile-content>
           </v-list-tile>
         </v-list>
+        <v-divider></v-divider>
+        <v-list>
+          <v-subheader>ML Flow</v-subheader>
+          <v-list-tile to="/main/mlflow/train">
+            <v-list-tile-action>
+              <v-icon>model_training</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Train</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
         <v-spacer></v-spacer>
         <v-list>
           <v-list-tile @click="logout">
