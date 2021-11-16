@@ -15,7 +15,8 @@ import {
     commitSetRegisteredModels,
 } from './mutations';
 
-import { dispatchCheckApiError } from '../main/actions';
+import { dispatchCheckApiError, dispatchCheckLoggedIn } from '../main/actions';
+import { commitAddNotification, commitRemoveNotification } from '../main/mutations';
 
 type MainContext = ActionContext<MLFlowState, State>;
 
@@ -83,11 +84,18 @@ export const actions = {
             await dispatchCheckApiError(context, e);
         }
     },
-    async actionGetAllRegisteredModels(context: MainContext) {
-
-    },
     async actionRegisterAModelFromRun(context: MainContext, payload: { runId: string, modelMeta: IModelCreateMeta }) {
+        const authToken = context.rootState.main.token;
+        const { runId, modelMeta } = payload;
 
+        try {
+            const resp = await api.registerAModel(runId, modelMeta, authToken);
+            commitAddNotification(context, { content: 'registered', color: 'success' });
+        } catch (e) {
+            await dispatchCheckApiError(context, e);
+        }
+    },
+    async actionGetAllRegisteredModels(context: MainContext) {
     },
 };
 
