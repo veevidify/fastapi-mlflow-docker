@@ -24,7 +24,6 @@
     - [Artifacts](#artifacts)
     - [Database for model registry](#database-for-model-registry)
     - [API & Dataflow](#api--dataflow)
-  - [- Ideally a system should always have a version of the model available for live prediction, training can overwrite a new version separately.](#--ideally-a-system-should-always-have-a-version-of-the-model-available-for-live-prediction-training-can-overwrite-a-new-version-separately)
 - [3. Development domain name](#3-development-domain-name)
   - [a. Development in `localhost` with a custom domain](#a-development-in-localhost-with-a-custom-domain)
   - [b. Development with a custom IP](#b-development-with-a-custom-ip)
@@ -468,6 +467,7 @@ mldb=#
 - `mlflow` log functions that persist artifacts such as figures, serialised models, etc. write directly to filesystem instead of via `mlflow server`. It'll however, submit to the server necessary metadata so server can serve them on its own UI later, and also keep track of the artifacts location for queries.
 - We'll avoid running `mlflow serve` a model directly from the filesystem (and using model via `invocations` api). Instead we use `mlflow client`, query the model path, load it onto memory via deserialisation and invoke model function such as predict, refit data, etc. as necessary, via worker, console or web routes.
 - Ideally a system should always have a version of the model available for live prediction, training can overwrite a new version separately.
+
 ---
 
 # 3. Development domain name
