@@ -141,10 +141,10 @@ export const api = {
       configWithAuthHeaders(token),
     );
   },
-  async predictWithModel(modelName: string, inputData: IInputData, token: string) {
-    return axios.post(
+  async predictSingleDatapointWithModel(modelName: string, inputData: IInputData, token: string) {
+    return axios.post<number[]>(
       `${apiPrefix}/ml/model/${modelName}/predict`,
-      inputData,
+      [inputData],
       configWithAuthHeaders(token),
     );
   },

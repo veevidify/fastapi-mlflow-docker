@@ -90,12 +90,22 @@ export const actions = {
 
         try {
             const resp = await api.registerAModel(runId, modelMeta, authToken);
+            const { data } = resp;
             commitAddNotification(context, { content: 'registered', color: 'success' });
+            commitSetCurrentRegisteredModel(context, data);
         } catch (e) {
             await dispatchCheckApiError(context, e);
         }
     },
     async actionGetAllRegisteredModels(context: MainContext) {
+        const authToken = context.rootState.main.token;
+        try {
+            const resp = await api.getRegisteredModels(authToken);
+            const { data } = resp;
+            commitSetRegisteredModels(context, data);
+        } catch (e) {
+            await dispatchCheckApiError(context, e);
+        }
     },
 };
 

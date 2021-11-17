@@ -15,7 +15,7 @@ export const getters = {
 const { read } = getStoreAccessors<MLFlowState, State>('');
 
 export const readRunInfos = read(getters.getRunInfos);
-export const getRegisteredModels = read(getters.getRegisteredModels);
+export const readRegisteredModels = read(getters.getRegisteredModels);
 export const readCurrentTrainingTask = read(getters.currentTrainingTask);
 export const readTrainingTaskResult = read(getters.trainingTaskResult);
 export const readCurrentRunId = read(getters.currentRunId);

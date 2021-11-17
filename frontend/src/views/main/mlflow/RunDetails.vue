@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-card class="ma-3 pa-3" v-if="!run">
       <div class="primary--text text--lighten-3">
-        Run not found or not been fetched. --Refresh
+        Run not found or not been fetched. --Refresh <!-- wip refresh btn -->
       </div>
     </v-card>
 

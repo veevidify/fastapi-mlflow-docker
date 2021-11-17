@@ -127,8 +127,8 @@ export default new Router({
                   component: () => import(/* webpackChunkName: "main-mlflow-models" */ './views/main/mlflow/ModelList.vue'),
                 },
                 {
-                  path: 'models/:id',
-                  // name: 'main-admin-users-edit',
+                  path: 'models/:name',
+                  name: 'main-mlflow-model-details',
                   component: () => import(
                     /* webpackChunkName: "main-mlflow-model-details" */ './views/main/mlflow/ModelDetails.vue'),
                 },
