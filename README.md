@@ -19,6 +19,12 @@
   - [h. Working with db](#h-working-with-db)
   - [i. Working with queue](#i-working-with-queue)
   - [k. Working with websocket](#k-working-with-websocket)
+  - [h. Working with MLFlow](#h-working-with-mlflow)
+    - [Added services](#added-services)
+    - [Artifacts](#artifacts)
+    - [Database for model registry](#database-for-model-registry)
+    - [API & Dataflow](#api--dataflow)
+  - [- Ideally a system should always have a version of the model available for live prediction, training can overwrite a new version separately.](#--ideally-a-system-should-always-have-a-version-of-the-model-available-for-live-prediction-training-can-overwrite-a-new-version-separately)
 - [3. Development domain name](#3-development-domain-name)
   - [a. Development in `localhost` with a custom domain](#a-development-in-localhost-with-a-custom-domain)
   - [b. Development with a custom IP](#b-development-with-a-custom-ip)
@@ -36,13 +42,25 @@ _**Disclaimer**: This file is a summarised version of `README.md`_
 # 1. Prerequisites and installation:
 * [Docker Compose](https://docs.docker.com/compose/install/).
 * [Poetry](https://python-poetry.org/) for Python package and environment management.
-* Node.js (with `npm`) for Frontend.
+* Node.js (with `npm`) for Frontend (usage of `nvm` is recommended).
 
 ## a. Workflow
-Start the stack with Docker Compose:
+- Create `.env` file:
+```bash
+$ cp .env.example .env
+```
+- From here change the necessary variables, especially the `_PORT` variables to *access services from the host*, and not colliding with any existing ports on your local machine. Note that this is for host access only, internal communication within the `docker` stack use the internal port the application binds to.
+- Change `PROJECT_ROOT` to point to your working directory, absolute path (tested on linux). This is important for MLFlow local dev.
+
+- Build stack (make sure error-free):
+```bash
+$ docker-compose build
+```
+
+- Start the stack with Docker Compose:
 
 ```bash
-docker-compose up -d
+$ docker-compose up -d
 ```
 
 ## b. URLs:
@@ -50,20 +68,16 @@ docker-compose up -d
 - Backend API: http://localhost/api/
 - Swagger UI: http://localhost/docs
 - Alternative doc (ReDoc): http://localhost/redoc
-- PGAdmin (for Postgres): http://localhost:5050
-- Flower (for Celery tasks): http://localhost:5555
+- PGAdmin (for Postgres): http://localhost:${PGADMIN_PORT}
+- Flower (for Celery tasks): http://localhost:${FLOWER_PORT}
 - Traefik dashboard, for proxy info: http://localhost:8090
 
-To check the logs, run:
+If you change any ports in .env, use appropriate url to browse.
+
+- To check the logs of a specific service, add the name of the service, e.g.:
 
 ```bash
-docker-compose logs
-```
-
-To check the logs of a specific service, add the name of the service, e.g.:
-
-```bash
-docker-compose logs backend
+$ docker-compose logs -f backend
 ```
 
 ---
@@ -103,17 +117,17 @@ $ poetry install
 $ poetry update
 ```
 
-_**Note**: It's important to note that poetry commands should be invoked from the host, within backend/app folder, instead of from within docker container service, in order to avoid conflicts._
-
-_**Note**: Poetry virtual envs do not affect docker environment bootstrapped by `docker-compose`. It's purely for IDE and intellisense._
+_**Note**: Poetry host's virtual envs do not affect docker environment bootstrapped by `docker-compose`. It's purely for IDE and intellisense. If you install new packages from one environment, make sure you do for the other environment to._
 
 ## b. Structures
 - SQLAlchemy models: `./backend/app/app/models/`
+- CRUD utils: `./backend/app/app/crud/`
 - Pydantic schemas: `./backend/app/app/schemas/`
-- API endpoints: `./backend/app/app/api/`
-- CRUD utils: `./backend/app/app/crud/`.
-- Celery worker's tasks in `./backend/app/app/worker.py`.
-- Additional packages for worker: `./backend/app/celeryworker.dockerfile`.
+- API endpoints: `./backend/app/app/api/api_v1`
+- Websockets endpoints: `./backend/app/app/api/ws`
+- Celery worker's tasks in `./backend/app/app/worker.py`
+- MLFlow modules in `./backend/app/ml`
+- MLFlow environment and artifacts `./mlflow-env`
 
 ## c. Docker Compose Override
 - Overrides only take effect for local dev env, to achieve this, modify `docker-compose.override.yml`.
@@ -125,7 +139,7 @@ _**Note**: Poetry virtual envs do not affect docker environment bootstrapped by 
 $ docker-compose up -d
 ```
 
-- Commented out `command` override. Uncomment it and comment the default one. This makes backend container run a process that does "nothing", but keeps the container alive, allows `exec` into running container, e.g. running python REPL, start-reload, start Jupyter nb, etc.
+- `command` override is commented out. Uncomment it and comment the default one makes backend container run a process that does "nothing", but keeps the container alive, allows `exec` into running container, e.g. running python REPL, start-reload, start Jupyter nb, etc.
 
 - To achieve this:
 
@@ -156,8 +170,8 @@ root@7f2607af31c3:/app# bash /start-reload.sh
 
 - `ipython` is installed as REPL, to use, cd into backend folder and invoke it:
 ```console
-cd backend/app
-ipython
+$ cd backend/app
+$ ipython
 ```
 - In here you can import backend's modules and test snippets/functions:
 ```
@@ -186,35 +200,35 @@ $ DOMAIN=backend sh ./scripts/test.sh
 - If stack is up, use:
 
 ```bash
-docker-compose exec backend /app/tests-start.sh
+$ docker-compose exec backend /app/tests-start.sh
 ```
 
 ### Local tests
 - Start the stack:
 
 ```Bash
-DOMAIN=backend sh ./scripts/test-local.sh
+$ DOMAIN=backend sh ./scripts/test-local.sh
 ```
 - `./backend/app` will be mounted as "host volume" inside the docker container (set in the file `docker-compose.dev.volumes.yml`).
 - Rerun the test on live code:
 
 ```Bash
-docker-compose exec backend /app/tests-start.sh
+$ docker-compose exec backend /app/tests-start.sh
 ```
 
 - `/app/tests-start.sh` simply calls `pytest`. Extra args to `pytest` will be forwarded, e.g., stopping on first error:
 ```bash
-docker-compose exec backend bash /app/tests-start.sh -x
+$ docker-compose exec backend bash /app/tests-start.sh -x
 ```
 
 ### Test Coverage
 - Enable HTML report, `pytest` fashion, by passing `--cov-report=html`:
 ```Bash
-DOMAIN=backend sh ./scripts/test-local.sh --cov-report=html
+$ DOMAIN=backend sh ./scripts/test-local.sh --cov-report=html
 ```
 - For live stack:
 ```bash
-docker-compose exec backend bash /app/tests-start.sh --cov-report=html
+$ docker-compose exec backend bash /app/tests-start.sh --cov-report=html
 ```
 
 ## f. Development with Jupyter Notebooks
@@ -222,7 +236,7 @@ docker-compose exec backend bash /app/tests-start.sh --cov-report=html
 - `docker-compose.override.yml` file sends variable `env` = `dev` to the build process of the Docker image (local development), while `Dockerfile` has steps to install and configure Jupyter within the container.
 - `exec` into running container:
 ```bash
-docker-compose exec backend bash
+$ docker-compose exec backend bash
 ```
 - Use environment variable `$JUPYTER` to run a Jupyter Notebook with everything configured. Can visit from host's web browser.
 
@@ -387,14 +401,81 @@ $ docker-compose exec queue redis-cli
     response.set_cookie(key="token", value=access_token, path="/", expires=access_token_expires)
 ```
 - Then this `token` cookie will automatically be attached to the WS request from frontend.
-- Read further below in 4. Frontend > WebSocket and CORS gotcha.
+- Read further below in 4. [b. WebSocket and CORS gotcha](#b-websocket-and-cors-gotcha)
+
+## h. Working with MLFlow
+### Added services
+- `mlflow` provides utilities to manage training executions and models. `mlflow server` can be created as a separate API server providing interfaces to track these executions and models. For the docker stack, it's added under the `mlflow` service.
+- When invoking from another docker service, we will use the port that `mlflow server` command binds to, by default `:5000`, and hostname (and internal routing) will be managed by `docker-compose`. In `python`:
+```python
+mlflow.set_tracking_uri('http://mlflow:5000')
+```
+- When executing from host, for example `poetry` venv (direct invocation or ipython), we need to hit `mlflow` via interface and port exposed/mapped to host. Mapped port is configured in `.env.` with variable `MLFLOW_PORT`. In `poetry`'s `ipython`:
+```
+In [1]: import mlflow
+
+In [2]: mlflow.set_tracking_uri('http://localhost:5005')
+
+In [3]: mlflow.get_artifact_uri()
+```
+
+### Artifacts
+- The intended setup for remote `mlflow server` (server and client live on separate systems), is to use a third-party filesystem, e.g. AWS S3, then point both client and server to this filesystem.
+- `mlflow client` instance will run machine learning code and persist artifacts (figures, serialised models, etc.) on this remote filesystem, then `mlflow server` can refer to and serve them as static as well.
+- To achieve this exact behaviour without code modification between environment, we use volume mounting, and fixate the path on both client & server to be absolute. The host's specific folder will be mounted in exact path onto each `mlflow` client and server docker services. With `PROJECT_ROOT` set in `.env`, in `docker-compose`:
+```yaml
+  # FastAPI backend and celeryworker will run mlflow client code
+  backend:
+    volumes:
+      - ./backend/app:/app
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+  ...
+  celeryworker:
+    volumes:
+      - ./backend/app:/app
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+  ...
+  # mlflow server will use this exact absolute path to serve artifacts (e.g. via UI)
+  mlflow:
+    volumes:
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+  ...
+  mlflowui:
+    volumes:
+      - ${PROJECT_ROOT}/mlflow-env:${PROJECT_ROOT}/mlflow-env
+```
+
+### Database for model registry
+- `mlflow server` is configured to rely on `postgresql` database for model registry. We'll use the same postgres service in the stack, under a separate database, by default `mldb`.
+- A script under `./scripts/postgres/create-multi-db.sh` will be added into the `postgres` container entrypoint via volumes. It will read `.env`'s `POSTGRES_MULTI_DB`, check if exists necessary database for `mlflow` and create them.
+- `mlflow` upon bootup will generate necessary schemas under this db.
+- For now, `FastAPI` `backend` and `celeryworker` won't read directly from this database but via `mlflow`, however might be necessary to do so in the future for performance reasons.
+- To browse this database, similarly to the default `app` database:
+```bash
+$ docker-compose exec db psql --user=postgres mldb
+```
+Output:
+```
+psql (12.9 (Debian 12.9-1.pgdg110+1))
+Type "help" for help.
+
+mldb=#
+```
+- Use `\c [database_name]` if necessary to switch between 2 databases.
+
+### API & Dataflow
+- `python` code that uses `import mlflow` are treated as `mlflow client`, which will invoke necessary endpoint of `mlflow server` to submit tracking details of the current training run.
+- `mlflow` log functions that persist artifacts such as figures, serialised models, etc. write directly to filesystem instead of via `mlflow server`. It'll however, submit to the server necessary metadata so server can serve them on its own UI later, and also keep track of the artifacts location for queries.
+- We'll avoid running `mlflow serve` a model directly from the filesystem (and using model via `invocations` api). Instead we use `mlflow client`, query the model path, load it onto memory via deserialisation and invoke model function such as predict, refit data, etc. as necessary, via worker, console or web routes.
+- Ideally a system should always have a version of the model available for live prediction, training can overwrite a new version separately.
+---
 
 # 3. Development domain name
 
 ## a. Development in `localhost` with a custom domain
 - With hostname/CORS/cookies issues, you can use `localhost.tiangolo.com`, it is set up to point to `localhost` (to the IP `127.0.0.1`) and all subdomains.
 - `localhost.tiangolo.com` was configured to be allowed. Otherwise, add it to the list in the variable `BACKEND_CORS_ORIGINS` in the `.env` file.
-- To configure it in your stack, follow **Change the development "domain"** below, using domain `localhost.tiangolo.com`.
+- To configure it in your stack, follow [c. Change the development "domain" name](#c-change-the-development-domain-name) below, using domain `localhost.tiangolo.com`.
 - You should be able to open: http://localhost.tiangolo.com, it will be server by your stack in `localhost`.
 
 ## b. Development with a custom IP
