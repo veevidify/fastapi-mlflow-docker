@@ -169,12 +169,11 @@ export default class ModelDetails extends Vue {
   public predictionError: string | null = null;
 
   public async requestPrediction() {
-    console.log(this.inputData);
     try {
       const resp = await api.predictSingleDatapointWithModel(
         this.model.name,
         this.inputData as IInputData,
-        this.authToken
+        this.authToken,
       );
       const { data } = resp;
       this.predictionResult = data[0];

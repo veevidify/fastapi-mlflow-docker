@@ -79,9 +79,9 @@ export default class RunDetails extends Vue {
     const runId = this.run?.info.run_id;
     if (runId) {
       dispatchRegisterAModelFromRun(this.$store, {
-        runId: runId,
+        runId,
         modelMeta: {
-          name: 'test from vue ui' // ideally pops a modal to enter name
+          name: 'test from vue ui', // ideally pops a modal to enter name
         },
       });
     }

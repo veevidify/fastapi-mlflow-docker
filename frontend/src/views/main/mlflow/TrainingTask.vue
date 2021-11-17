@@ -131,10 +131,6 @@ export default class TrainingTask extends Vue {
     }
   }
 
-  public async gotoRunDetails() {
-    console.log("follow details link");
-  }
-
   get task() {
     return readTrainingTaskResult(this.$store);
   }
