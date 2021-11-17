@@ -34,9 +34,6 @@
   - [c. (Optional) Removing frontend](#c-optional-removing-frontend)
 
 ---
-_**Disclaimer**: This file is a summarised version of `README.md`_
-
----
 
 # 1. Prerequisites and installation:
 * [Docker Compose](https://docs.docker.com/compose/install/).
