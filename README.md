@@ -463,6 +463,7 @@ mldb=#
 - `python` code that uses `import mlflow` are treated as `mlflow client`, which will invoke necessary endpoint of `mlflow server` to submit tracking details of the current training run.
 - `mlflow` log functions that persist artifacts such as figures, serialised models, etc. write directly to filesystem instead of via `mlflow server`. It'll however, submit to the server necessary metadata so server can serve them on its own UI later, and also keep track of the artifacts location for queries.
 - We'll avoid running `mlflow serve` a model directly from the filesystem (and using model via `invocations` api). Instead we use `mlflow client`, query the model path, load it onto memory via deserialisation and invoke model function such as predict, refit data, etc. as necessary, via worker, console or web routes.
+- Similarly, `mlflow client` will query from the server model metadata and artifact path in the filesystem, then go to read the filesystem directly to load models into memory to predict, refit, validate etc.
 - Ideally a system should always have a version of the model available for live prediction, training can overwrite a new version separately.
 
 ---
