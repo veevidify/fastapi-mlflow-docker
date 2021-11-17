@@ -2,6 +2,8 @@
   <div>
     <v-navigation-drawer persistent :mini-variant="miniDrawer" v-model="showDrawer" fixed app>
       <v-layout column fill-height>
+
+        <!-- main & user's profile -->
         <v-list>
           <v-subheader>Main menu</v-subheader>
           <v-list-tile to="/main/dashboard">
@@ -37,7 +39,10 @@
             </v-list-tile-content>
           </v-list-tile>
         </v-list>
+
         <v-divider></v-divider>
+
+        <!-- WS app -->
         <v-list>
           <v-subheader>Live</v-subheader>
           <v-list-tile to="/main/live/chat">
@@ -49,7 +54,10 @@
             </v-list-tile-content>
           </v-list-tile>
         </v-list>
+
         <v-divider></v-divider>
+
+        <!-- Admin functions -->
         <v-list subheader v-show="hasAdminAccess">
           <v-subheader>Admin</v-subheader>
           <v-list-tile to="/main/admin/users/all">
@@ -77,7 +85,41 @@
             </v-list-tile-content>
           </v-list-tile>
         </v-list>
+
+        <v-divider></v-divider>
+
+        <!-- MLFlow functions -->
+        <v-list subheader v-show="hasAdminAccess">
+          <v-subheader>ML Flow</v-subheader>
+          <v-list-tile to="/main/mlflow/train">
+            <v-list-tile-action>
+              <v-icon>model_training</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Train</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile to="/main/mlflow/runs">
+            <v-list-tile-action>
+              <v-icon>list</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>MLFlow Runs</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile to="/main/mlflow/models">
+            <v-list-tile-action>
+              <v-icon>dns</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Registered Models</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+
         <v-spacer></v-spacer>
+
+        <!-- others -->
         <v-list>
           <v-list-tile @click="logout">
             <v-list-tile-action>
@@ -87,7 +129,9 @@
               <v-list-tile-title>Logout</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
+
           <v-divider></v-divider>
+
           <v-list-tile @click="switchMiniDrawer">
             <v-list-tile-action>
               <v-icon v-html="miniDrawer ? 'chevron_right' : 'chevron_left'"></v-icon>
@@ -97,8 +141,11 @@
             </v-list-tile-content>
           </v-list-tile>
         </v-list>
+
       </v-layout>
     </v-navigation-drawer>
+
+    <!-- triple dots -->
     <v-toolbar dark color="primary" app>
       <v-toolbar-side-icon @click.stop="switchShowDrawer"></v-toolbar-side-icon>
       <v-toolbar-title v-text="appName"></v-toolbar-title>
@@ -127,6 +174,8 @@
         </v-list>
       </v-menu>
     </v-toolbar>
+
+    <!-- contents placeholder -->
     <v-content>
       <router-view></router-view>
     </v-content>

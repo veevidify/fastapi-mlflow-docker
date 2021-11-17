@@ -103,6 +103,37 @@ export default new Router({
                 },
               ],
             },
+            {
+              path: 'mlflow',
+              component: RouterComponent,
+              redirect: 'dashboard',
+              children: [
+                {
+                  path: 'train',
+                  component: () => import(/* webpackChunkName: "main-mlflow-train" */ './views/main/mlflow/TrainingTask.vue'),
+                },
+                {
+                  path: 'runs',
+                  component: () => import(/* webpackChunkName: "main-mlflow-runs" */ './views/main/mlflow/RunList.vue'),
+                },
+                {
+                  path: 'runs/:id',
+                  name: 'main-mlflow-run-details',
+                  component: () => import(
+                    /* webpackChunkName: "main-mlflow-run-details" */ './views/main/mlflow/RunDetails.vue'),
+                },
+                {
+                  path: 'models',
+                  component: () => import(/* webpackChunkName: "main-mlflow-models" */ './views/main/mlflow/ModelList.vue'),
+                },
+                {
+                  path: 'models/:name',
+                  name: 'main-mlflow-model-details',
+                  component: () => import(
+                    /* webpackChunkName: "main-mlflow-model-details" */ './views/main/mlflow/ModelDetails.vue'),
+                },
+              ],
+            },
           ],
         },
       ],

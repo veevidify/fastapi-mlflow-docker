@@ -1,3 +1,9 @@
+declare global {
+    interface GObject {
+        [key: string]: any;
+    }
+}
+
 export interface IUserProfile {
     email: string;
     is_active: boolean;
@@ -42,4 +48,71 @@ export interface IWSMessage {
     intent: string;
     by: string;
     message: string;
+}
+
+export interface IEnetParam {
+    alpha: number;
+    l1_ratio: number;
+}
+
+export interface IRunInfo {
+    artifact_uri: string;
+    start_time: number;
+    end_time: number | null;
+    run_id: string;
+    status: string;
+    user_id: string;
+}
+
+export interface IRunData {
+    metrics: GObject;
+    params: GObject;
+    tags: GObject;
+}
+
+export interface IRun {
+    data: IRunData;
+    info: IRunInfo;
+}
+
+export interface IModelVersion {
+    name: string;
+    current_stage: string;
+    description: string;
+    run_id: string;
+    run_link: string;
+    source: string;
+    status: string;
+    status_message: string;
+    user_id: string;
+    version: string;
+    creation_timestamp: number;
+    last_updated_timestamp: number;
+    tags: GObject;
+}
+
+export interface IRegisteredModel {
+    latest_versions: IModelVersion[];
+    name: string;
+    description: string;
+    creation_timestamp: number;
+    last_updated_timestamp: number;
+    tags: GObject;
+}
+
+export interface IModelCreateMeta {
+    name: string;
+}
+
+export interface IInputData {
+    age: number;
+    sex: number;
+    bmi: number;
+    bp: number;
+    s1: number;
+    s2: number;
+    s3: number;
+    s4: number;
+    s5: number;
+    s6: number;
 }
